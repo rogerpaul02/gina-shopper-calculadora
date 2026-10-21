@@ -1,0 +1,217 @@
+
+
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Gina Shopper USA</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{margin:0;padding:18px;background:#f5f3ef;font-family:Arial,sans-serif;color:#222}
+
+.card{max-width:480px;margin:auto;background:white;padding:22px;border-radius:18px;box-shadow:0 4px 18px #0001}
+
+h1{text-align:center;color:#8b2457;font-size:27px;margin:4px 0}
+
+.sub{text-align:center;color:#666;margin-bottom:24px}
+
+label{display:block;font-weight:bold;margin:15px 0 7px}
+
+input{width:100%;padding:13px;border:1px solid #ccc;border-radius:9px;font-size:17px}
+
+button{width:100%;padding:14px;border:0;border-radius:9px;font-size:16px;font-weight:bold;margin-top:14px;cursor:pointer}
+
+.calculate{background:#8b2457;color:white}
+
+.copy{background:#e9d7e1;color:#63203f}
+
+.result{background:#faf1f6;padding:16px;border-radius:12px;margin-top:20px}
+
+.line{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid #eadde4}
+
+.line span:last-child{text-align:right;font-weight:bold}
+
+.total{font-size:20px;color:#8b2457;border:0}
+
+.small{text-align:center;color:#777;font-size:12px;margin-top:18px}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h1>Gina Shopper USA</h1>
+
+<div class="sub">Calculadora de precios y comisiones</div>
+
+<label>Precio del producto (USD)</label>
+
+<input id="precio" type="number" min="0" step="0.01" placeholder="Ej. 20.00">
+
+<label>Envío (USD)</label>
+
+<input id="envio" type="number" min="0" step="0.01" value="0">
+
+<label>Tipo de cambio (Bs por dólar)</label>
+
+<input id="cambio" type="number" min="0.01" step="0.01" value="11.70">
+
+<button class="calculate" onclick="calcular()">CALCULAR TOTAL</button>
+
+<div class="result" id="resultado" aria-live="polite">
+
+<div style="text-align:center;color:#777">Ingresa el precio del producto para comenzar.</div>
+
+</div>
+
+<button class="copy" onclick="copiar()">COPIAR RECIBO</button>
+
+<div class="small">Gina Shopper USA · Compras desde Estados Unidos</div>
+
+</div>
+
+<script>
+
+let recibo = "";
+
+function dinero(n) {
+
+  return "$" + n.toFixed(2);
+
+}
+
+function calcular() {
+
+  const p = Number(document.getElementById("precio").value);
+
+  const e = Number(document.getElementById("envio").value);
+
+  const c = Number(document.getElementById("cambio").value);
+
+  const r = document.getElementById("resultado");
+
+  if (document.getElementById("precio").value === "" ||
+
+      !Number.isFinite(p) || p <= 0 ||
+
+      !Number.isFinite(e) || e < 0 ||
+
+      !Number.isFinite(c) || c <= 0) {
+
+    r.innerHTML = "<b>Revisa los datos.</b><br>El precio debe ser mayor que cero; el envío no puede ser negativo y el cambio debe ser válido.";
+
+    recibo = "";
+
+    return;
+
+  }
+
+  let tasa;
+
+  if (p < 50) tasa = 0.25;
+
+  else if (p < 100) tasa = 0.20;
+
+  else if (p < 200) tasa = 0.15;
+
+  else if (p < 500) tasa = 0.10;
+
+  else tasa = 0.07;
+
+  const comision = p * tasa;
+
+  const taxes = p * 0.06;
+
+  const total = p + comision + taxes + e;
+
+  const bs = total * c;
+
+  recibo =
+
+    "GINA SHOPPER USA\n" +
+
+    "Precio del producto: " + dinero(p) + "\n" +
+
+    "Comisión (" + (tasa * 100) + "%): " + dinero(comision) + "\n" +
+
+    "Taxes (6%): " + dinero(taxes) + "\n" +
+
+    "Envío: " + dinero(e) + "\n" +
+
+    "TOTAL: " + dinero(total) + "\n" +
+
+    "Tipo de cambio: " + c.toFixed(2) + " Bs/USD\n" +
+
+    "TOTAL EN BOLIVIANOS: " + bs.toFixed(2) + " Bs";
+
+  r.innerHTML =
+
+    '<div class="line"><span>Precio del producto</span><span>' + dinero(p) + '</span></div>' +
+
+    '<div class="line"><span>Comisión (' + (tasa*100) + '%)</span><span>' + dinero(comision) + '</span></div>' +
+
+    '<div class="line"><span>Taxes (6%)</span><span>' + dinero(taxes) + '</span></div>' +
+
+    '<div class="line"><span>Envío</span><span>' + dinero(e) + '</span></div>' +
+
+    '<div class="line total"><span>TOTAL USD</span><span>' + dinero(total) + '</span></div>' +
+
+    '<div class="line total"><span>TOTAL Bs</span><span>' + bs.toFixed(2) + ' Bs</span></div>';
+
+}
+
+async function copiar() {
+
+  if (!recibo) {
+
+    alert("Primero calcula el total.");
+
+    return;
+
+  }
+
+  try {
+
+    await navigator.clipboard.writeText(recibo);
+
+    alert("¡Recibo copiado! Ya puedes pegarlo en WhatsApp.");
+
+  } catch (err) {
+
+    const area = document.createElement("textarea");
+
+    area.value = recibo;
+
+    document.body.appendChild(area);
+
+    area.select();
+
+    const ok = document.execCommand("copy");
+
+    area.remove();
+
+    alert(ok ? "¡Recibo copiado! Ya puedes pegarlo en WhatsApp." :
+
+      "No se pudo copiar. Intenta nuevamente.");
+
+  }
+
+}
+
+</script>
+
+</body>
+
+</html>
